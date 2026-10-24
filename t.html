@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Bullet Club Effect</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f4f4f2;--card:#fff;--tx:#0a0a0a;--mut:#666;--ln:#d6d6d2;--ac:#0a0a0a;--ac2:#8a6d00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#050505;--card:#111;--tx:#f2f2f2;--mut:#9a9a9a;--ln:#2a2a2a;--ac:#f2f2f2;--ac2:#d4af37;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#050505;--card:#111;--tx:#f2f2f2;--mut:#9a9a9a;--ln:#2a2a2a;--ac:#f2f2f2;--ac2:#d4af37;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+header{padding:20px 18px 6px;max-width:1100px;margin:auto}h1{margin:0;font-size:24px}h1{letter-spacing:.04em;text-transform:uppercase}h1 span{color:var(--ac2)}header{border-bottom:3px solid var(--ac2)}
+.sub{color:var(--mut);margin:2px 0 0}
+nav{display:flex;gap:6px;flex-wrap:wrap;max-width:1100px;margin:12px auto;padding:0 18px}
+nav button{background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:99px;padding:6px 14px;cursor:pointer;font:inherit}
+nav button.on{background:var(--ac);border-color:var(--ac);color:var(--bg)}.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}.node{border:1px solid var(--ln);border-left:3px solid var(--ac2);border-radius:6px;padding:5px 10px;background:var(--card)}.node small{display:block;color:var(--mut)}.arr{color:var(--ac2);font-weight:700}
+main{max-width:1100px;margin:auto;padding:0 18px 40px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:14px;margin-bottom:10px}
+.k{font-size:26px;font-weight:700;color:var(--ac2)}.l{color:var(--mut);font-size:12px}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%}#mt td:first-child{cursor:pointer;text-decoration:underline;text-decoration-color:var(--ac2)}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--ln);vertical-align:top}th{color:var(--mut);font-size:12px;position:sticky;top:0;background:var(--card)}
+input,select{background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:7px 10px;font:inherit}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tag{font-size:11px;border:1px solid var(--ln);border-radius:99px;padding:1px 8px;color:var(--mut);white-space:nowrap}
+.warn{color:var(--ac2)}a{color:var(--ac2)}h2{font-size:18px;margin:6px 0 10px}
+.tl{border-left:3px solid var(--ac);padding-left:12px;margin:0 0 14px 6px}
+</style></head><body>
+<header><h1>The Bullet Club <span>Effect</span></h1><p class="sub">Interactive view of the Bullet Club Impact Database, 2013–2026. Disclosed figures are labelled as such; nothing is extrapolated.</p></header>
+<nav id="nav"></nav><main id="v"></main>
+<script>
+const D=__DATA__;
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const yr=s=>parseInt((s||'').slice(0,4))||null;
+const M=D.m.map(r=>({n:r[0],role:r[1],j:r[2],l:r[3],note:r[4],pr:r[5],f:r[6]==='Yes'}));
+const TREE=[['Main line to AEW',[['Prince Devitt’s Bullet Club','2013, NJPW'],['AJ Styles era','2014–2016'],['Kenny Omega era','2016–2018'],['The Elite','Left BC Oct 2018'],['All In','Sep 2018, 11,263 attended'],['AEW','2019 onward']]],['AJ Styles, Gallows and Anderson to WWE',[['AJ Styles / Gallows / Anderson','Former BC'],['The Club / The O.C.','WWE']]],['G.O.D. to WWE',[['Tama Tonga / Tonga Loa','BC OG, NJPW'],['The Bloodline / MFT lineage','WWE']]],['Jay White to AEW',[['Jay White','NJPW and Impact/TNA'],['Bullet Club Gold','2023'],['Bang Bang Gang','AEW, continued after BC dissolved']]],['Final NJPW generation',[['Finlay','2023'],['War Dogs','NJPW'],['BC dissolves','Jan 2026']]]];const tabs=['Overview','Index','Members','Timeline','Money','Audience','Titles','Lineage','Gaps'];
+let cur=(location.hash||'#Overview').slice(1);if(!tabs.includes(cur))cur='Overview';
+function table(h,rs,lc){return `<div class="tbl"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rs.map(r=>`<tr>${r.map((c,i)=>`<td>${/^https?:/.test(c)?`<a href="${esc(c)}" target="_blank" rel="noopener">source</a>`:esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`}
+function active(y){return M.filter(m=>{const a=yr(m.j),b=yr(m.l)||2026;return a&&a<=y&&y<=b})}
+function chart(){const ys=[];for(let y=2013;y<=2026;y++)ys.push([y,active(y).length]);const mx=Math.max(...ys.map(x=>x[1])),w=640,h=220,bw=w/ys.length;
+return `<svg viewBox="0 0 ${w} ${h+24}" width="100%" role="img" aria-label="Members active per year">${ys.map(([y,n],i)=>{const bh=n/mx*h;return `<rect x="${i*bw+6}" y="${h-bh}" width="${bw-12}" height="${bh}" fill="var(--ac)" rx="3"/><text x="${i*bw+bw/2}" y="${h-bh-4}" text-anchor="middle" font-size="11" fill="var(--tx)">${n}</text><text x="${i*bw+bw/2}" y="${h+16}" text-anchor="middle" font-size="11" fill="var(--mut)">${y}</text>`}).join('')}</svg>`}
+const V={
+Overview(){const s=D.mer.find(r=>r[3]==='Lifetime ecommerce units'),ai=D.a.find(r=>r[3]==='Attendance'),pk=Math.max(...[...Array(14)].map((_,i)=>active(2013+i).length));
+return `<div class="grid">${[[M.length,'Roster entries'],[D.s.length,'Official subgroups'],['75','NJPW title reigns by dissolution'],['106,000+','Classic PWT shirts (ecommerce only)'],['25,000','Hot Topic 2017 BC reorder'],[(+ai[4]).toLocaleString(),'All In 2018 attendance'],['~50,000','All In reported PPV buys']].map(([a,b])=>`<div class="card"><div class="k">${a}</div><div class="l">${b}</div></div>`).join('')}</div>
+<div class="card"><h2>Members active per calendar year</h2>${chart()}<p class="l">Derived from joined/left dates in the Members sheet. A member counts for every year from joining through leaving, inclusive (peak: ${pk}).</p></div>
+<div class="card"><h2>Promotion footprint</h2>${table(['Promotion','Market','Relationship','Period','Legacy'],D.p)}</div>`},
+Members(){return `<div class="bar"><input id="q" placeholder="Search name or promotion…"><select id="role"><option value="">All roles</option>${[...new Set(M.map(m=>m.role))].sort().map(r=>`<option>${esc(r)}</option>`).join('')}</select><select id="yy"><option value="">Any year</option>${[...Array(14)].map((_,i)=>`<option>${2013+i}</option>`).join('')}</select></div><div id="pf"></div><div id="mt"></div>`},
+Timeline(){return D.t.map(r=>`<div class="tl"><b>${esc(r[0])}</b> · ${esc(r[1])} <span class="tag">${esc(r[4])}</span><br><b>${esc(r[2])}</b><br>${esc(r[3])} <a href="${esc(r[5])}" target="_blank" rel="noopener">source</a></div>`).join('')},
+Money(){return `<div class="card warn">Exact Bullet Club revenue and profit are not publicly disclosed. The PWT company-wide $75M+ figure is context only, not Bullet Club revenue. The 417,430-unit claim is an unaudited company claim.</div>`+table(['Product','Channel','Period','Metric','Value','Unit','Evidence','Source','Notes'],D.mer)},
+Audience(){return `<div class="card warn">Quarter-hour and episode figures are episode-level associations, not causal lift from Bullet Club.</div>`+table(['Event','Promotion','Date','Metric','Value','Unit','Evidence','Source','Notes'],D.a)},
+Titles(){return `<div class="bar"><input id="tq" placeholder="Search titles, promotions, holders…"></div><div id="tt"></div>`},
+Lineage(){return `<h2>Family tree: documented lineage</h2><p class="l">Chains are drawn from the Timeline and Related &amp; Inspired sheets. WWE groups are talent lineage, not official Bullet Club branches.</p>`+TREE.map(c=>`<div class="card"><b>${c[0]}</b><div class="chain">${c[1].map((n,i)=>`${i?'<span class="arr">→</span>':''}<div class="node">${n[0]}<small>${n[1]}</small></div>`).join('')}</div></div>`).join('')+`<h2>Subgroups</h2>`+table(['Subgroup','Members','Tenure','Type','Promotions'],D.s)+`<h2 style="margin-top:18px">Related and inspired groups</h2>`+table(['Promotion','Group','People','Relationship','Why it matters'],D.r)},
+Index(){return `<div class="card"><h2>Documented Footprint Index, 2013–2026</h2><p>Each year is scored 0–100 from four measures in your workbook, each scaled so its best year is 1, then combined with the weights below. Move the sliders and see whether the peak year changes.</p>${IDXL.map((l,i)=>`<label style="display:block">${l}: <input type="range" min="0" max="5" value="1" data-i="${i}"></label>`).join('')}<p class="l">Limits: roster counts active members; milestones counts Timeline entries; merch units sums single-year shirt figures (square-root scaled, 2017 dominates); audience peak is the log of the largest attendance or viewer figure that year (mixed units). Titles are excluded because the workbook has no title dates. Years with no data score 0 on that measure, which is a gap, not proof of zero. This shows documented footprint, not causal impact. Two eras compete for the peak: 2017–18 (merchandise, All In) and 2023 (roster size and AEW ratings, the only years with recovered TV data). Try the sliders: the peak flips to 2017 when merch is weighted up or audience is set to 0. The full analysis is in the PDF report.</p></div><div class="card" id="ixo"></div>`},
+Gaps(){return table(['Datapoint','Status','Importance','Handling'],D.g)}};
+function mt(){const q=($('#q').value||'').toLowerCase(),r=$('#role').value,y=+$('#yy').value;
+const L=M.filter(m=>(!q||(m.n+m.pr).toLowerCase().includes(q))&&(!r||m.role===r)&&(!y||active(y).includes(m)));
+$('#mt').innerHTML=`<p class="l">${L.length} of ${M.length} entries</p>`+table(['Name','Role','Joined','Left','Promotions','Founder','Notes'],L.map(m=>[m.n,m.role,m.j,m.l,m.pr,m.f?'Yes':'',m.note]))}
+function tt(){const q=($('#tq').value||'').toLowerCase();const L=D.c.filter(r=>r.join(' ').toLowerCase().includes(q));$('#tt').innerHTML=`<p class="l">${L.length} entries</p>`+table(['Promotion','Title / accomplishment','Type','Count','Holder(s)','Disclosure'],L)}
+const key=n=>{const w=n.replace(/[“"][^”"]*[”"]/g,'').trim().split(/\s+/);return (w[0]+' '+w[w.length-1]).toLowerCase()};
+function prof(e){const td=e.target.closest('td');if(!td||td.cellIndex!==0)return;const nm=td.textContent,m=M.find(x=>x.n===nm);if(!m)return;const k=key(nm);
+const subs=D.s.filter(r=>r[1].split(';').some(p=>key(p.trim())===k)),ti=D.c.filter(r=>r[4].split(/&|,|;| and /).some(p=>key(p.trim())===k));
+$('#pf').innerHTML=`<div class="card"><h2>${esc(nm)}${m.f?' <span class="tag">Founder</span>':''}</h2><p><b>${esc(m.role)}</b> · ${esc(m.j)} to ${esc(m.l||'present')} · ${esc(m.pr)}${m.note?' · '+esc(m.note):''}</p><b>Subgroups (${subs.length})</b>${subs.length?'<ul>'+subs.map(r=>`<li>${esc(r[0])} <span class="tag">${esc(r[2])}</span></li>`).join('')+'</ul>':'<p class="l">None listed.</p>'}<b>Titles and awards (${ti.length})</b>${ti.length?'<ul>'+ti.map(r=>`<li>${esc(r[1])} <span class="tag">${esc(r[0])}</span></li>`).join('')+'</ul>':'<p class="l">None matched by name in the Titles sheet.</p>'}<p class="l">Matched by first and last name, so check unusual spellings against the Titles tab.</p></div>`;$('#pf').scrollIntoView({behavior:'smooth',block:'nearest'})}
+const IDXL=['Roster size','Milestones','Merch units','Audience peak'];
+function comps(){const Y=[...Array(14)].map((_,i)=>2013+i),nm=a=>{const m=Math.max(...a)||1;return a.map(x=>x/m)},num=r=>r[4]!==''&&!isNaN(+r[4]);
+return{Y,C:[nm(Y.map(y=>active(y).length)),nm(Y.map(y=>D.t.filter(r=>yr(r[0])===y).length)),nm(Y.map(y=>Math.sqrt(D.mer.filter(r=>/^\d{4}(-\d\d)?$/.test(r[2])&&yr(r[2])===y&&r[5]==='shirts'&&num(r)).reduce((s,r)=>s+ +r[4],0)))),nm(Y.map(y=>{const v=D.a.filter(r=>yr(r[2])===y&&num(r)).map(r=>+r[4]);return v.length?Math.log10(Math.max(...v)):0}))]}}
+function idx(){const w=[...document.querySelectorAll('[data-i]')].map(x=>+x.value),{Y,C}=comps(),tw=w.reduce((a,b)=>a+b,0)||1,S=Y.map((y,i)=>100*C.reduce((s,c,k)=>s+w[k]*c[i],0)/tw),pk=S.indexOf(Math.max(...S)),W=640,H=200,bw=W/14;
+$('#ixo').innerHTML=`<svg viewBox="0 0 ${W} ${H+24}" width="100%" role="img" aria-label="Index by year">${S.map((s,i)=>`<rect x="${i*bw+6}" y="${H-s*H/100}" width="${bw-12}" height="${s*H/100}" rx="3" fill="${i===pk?'var(--ac2)':'var(--ac)'}"/><text x="${i*bw+bw/2}" y="${H-s*H/100-4}" text-anchor="middle" font-size="11" fill="var(--tx)">${Math.round(s)}</text><text x="${i*bw+bw/2}" y="${H+16}" text-anchor="middle" font-size="11" fill="var(--mut)">${Y[i]}</text>`).join('')}</svg><p><b>Peak under these weights: ${Y[pk]}</b> (gold bar).</p>`+table(['Year',...IDXL],Y.map((y,i)=>[y,...C.map(c=>c[i].toFixed(2))]))}
+function go(t){cur=t;history.replaceState(null,'','#'+t);$('#nav').innerHTML=tabs.map(x=>`<button class="${x===t?'on':''}" data-t="${x}">${x}</button>`).join('');$('#v').innerHTML=V[t]();
+if(t==='Members'){['#q','#role','#yy'].forEach(s=>$(s).addEventListener('input',mt));mt();$('#mt').addEventListener('click',prof)}if(t==='Titles'){$('#tq').addEventListener('input',tt);tt()}if(t==='Index'){document.querySelectorAll('[data-i]').forEach(x=>x.addEventListener('input',idx));idx()}}
+$('#nav').addEventListener('click',e=>{if(e.target.dataset.t)go(e.target.dataset.t)});
+addEventListener('hashchange',()=>{const t=location.hash.slice(1);if(tabs.includes(t)&&t!==cur)go(t)});
+go(cur);
+</script></body></html>
